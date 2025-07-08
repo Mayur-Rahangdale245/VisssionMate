@@ -1,0 +1,6 @@
+streamlit
+pytesseract
+pillow
+speechrecognition
+pyttsx3
+openai
