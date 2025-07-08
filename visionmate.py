@@ -1,15 +1,14 @@
 import streamlit as st
-import pytesseract
+import easyocr
 from PIL import Image
 import speech_recognition as sr
 import pyttsx3
 import openai
-import io
-import requests
 
 # === SETUP ===
-openai.api_key = "YOUR_OPENAI_API_KEY"  # Replace with your key
+openai.api_key = st.secrets["openai_key"]  # Load from Streamlit Secrets
 engine = pyttsx3.init()
+reader = easyocr.Reader(['en'])
 
 # === FUNCTIONS ===
 def speak(text):
@@ -18,8 +17,9 @@ def speak(text):
 
 def extract_text_from_image(uploaded_file):
     image = Image.open(uploaded_file)
-    text = pytesseract.image_to_string(image)
-    return text
+    result = reader.readtext(image)
+    extracted_text = ' '.join([item[1] for item in result])
+    return extracted_text
 
 def transcribe_speech():
     r = sr.Recognizer()
@@ -40,8 +40,7 @@ def ask_chatgpt(prompt):
     return response['choices'][0]['message']['content']
 
 def describe_image(uploaded_file):
-    # Placeholder description
-    return "This appears to be an image. Image description from AI can be added using external APIs."
+    return "Image description placeholder. Add real model if needed."
 
 # === STREAMLIT UI ===
 st.title("👁️ VisionMate - Smart Assistant for the Visually Impaired")
