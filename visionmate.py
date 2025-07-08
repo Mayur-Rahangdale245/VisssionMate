@@ -1,5 +1,5 @@
 import streamlit as st
-import easyocr
+import requests
 from PIL import Image
 import speech_recognition as sr
 import pyttsx3
@@ -8,7 +8,6 @@ import openai
 # === SETUP ===
 openai.api_key = st.secrets["openai_key"]  # Load from Streamlit Secrets
 engine = pyttsx3.init()
-reader = easyocr.Reader(['en'])
 
 # === FUNCTIONS ===
 def speak(text):
@@ -16,10 +15,20 @@ def speak(text):
     engine.runAndWait()
 
 def extract_text_from_image(uploaded_file):
-    image = Image.open(uploaded_file)
-    result = reader.readtext(image)
-    extracted_text = ' '.join([item[1] for item in result])
-    return extracted_text
+    api_key = "helloworld"  # Free test key from ocr.space
+    image_bytes = uploaded_file.read()
+
+    response = requests.post(
+        'https://api.ocr.space/parse/image',
+        files={"filename": image_bytes},
+        data={"apikey": api_key, "language": "eng"},
+    )
+
+    result = response.json()
+    try:
+        return result['ParsedResults'][0]['ParsedText']
+    except Exception:
+        return "Text could not be extracted."
 
 def transcribe_speech():
     r = sr.Recognizer()
