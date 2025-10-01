@@ -4,11 +4,7 @@ from PIL import Image
 from gtts import gTTS
 import tempfile
 import os
-import openai
 from audio_recorder_streamlit import audio_recorder
-
-# === SETUP ===
-openai.api_key = st.secrets["openai_key"]  # Load from Streamlit Secrets
 
 # === FUNCTIONS ===
 def speak(text):
@@ -35,31 +31,9 @@ def extract_text_from_image(uploaded_file):
     except Exception:
         return "Text could not be extracted."
 
-def ask_chatgpt(prompt):
-    """Send prompt to ChatGPT and return response"""
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    return response['choices'][0]['message']['content']
-
-def transcribe_audio(audio_bytes):
-    """Transcribe recorded audio using Whisper API"""
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f:
-        f.write(audio_bytes)
-        file_path = f.name
-
-    with open(file_path, "rb") as audio_file:
-        transcript = openai.Audio.transcriptions.create(
-            model="whisper-1",
-            file=audio_file
-        )
-    return transcript.text
-
 def describe_image(uploaded_file):
     """Placeholder for image description (replace with Vision model if needed)"""
     return "Image description placeholder. Add real model if needed."
-
 
 # === STREAMLIT UI ===
 st.title("👁️ VisionMate - Smart Assistant for the Visually Impaired")
@@ -68,8 +42,7 @@ st.markdown("Helps you read, listen, understand, and interact with the world aro
 option = st.sidebar.selectbox("Choose a feature:", [
     "📄 Read Text from Image",
     "🖼️ Describe Image",
-    "🎤 Voice Assistant",
-    "📝 Formal Message Generator"
+    "🎤 Voice Recorder"
 ])
 
 # --- 📄 Read Text from Image ---
@@ -94,31 +67,15 @@ elif option == "🖼️ Describe Image":
             audio_path = speak(description)
             st.audio(audio_path, format="audio/mp3")
 
-# --- 🎤 Voice Assistant ---
-elif option == "🎤 Voice Assistant":
-    st.markdown("🎙️ Record your voice and let VisionMate respond.")
+# --- 🎤 Voice Recorder ---
+elif option == "🎤 Voice Recorder":
+    st.markdown("🎙️ Record your voice and play it back.")
     audio_bytes = audio_recorder(pause_threshold=2.0, sample_rate=16000)
     
     if audio_bytes:
-        st.success("Audio recorded! Processing...")
-        query = transcribe_audio(audio_bytes)
-        st.write("You said:", query)
-
-        response = ask_chatgpt(query)
-        st.subheader("Response:")
-        st.write(response)
-
-        audio_path = speak(response)
-        st.audio(audio_path, format="audio/mp3")
-
-# --- 📝 Formal Message Generator ---
-elif option == "📝 Formal Message Generator":
-    input_text = st.text_area("Describe your issue or message casually")
-    if st.button("Generate Formal Message") and input_text:
-        prompt = f"Convert this into a professional and polite message:\n{input_text}"
-        response = ask_chatgpt(prompt)
-        st.subheader("Formal Version:")
-        st.write(response)
-        if st.button("🔊 Read Aloud"):
-            audio_path = speak(response)
-            st.audio(audio_path, format="audio/mp3")
+        st.success("Audio recorded!")
+        # Save temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f:
+            f.write(audio_bytes)
+            file_path = f.name
+        st.audio(file_path, format="audio/wav")
