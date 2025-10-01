@@ -1,6 +1,6 @@
 streamlit
 requests
 Pillow
-gtts
+gTTs
 openai
 streamlit-audio-recorder
