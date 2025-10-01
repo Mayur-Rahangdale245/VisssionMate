@@ -1,6 +1,6 @@
 streamlit
-pillow
-speechrecognition
-pyttsx3
-openai
 requests
+Pillow
+gtts
+openai
+streamlit-audio-recorder
